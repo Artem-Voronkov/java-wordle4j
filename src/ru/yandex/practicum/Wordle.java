@@ -3,15 +3,6 @@ package ru.yandex.practicum;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-/*
-в главном классе нам нужно:
-    создать лог-файл (он должен передаваться во все классы)
-    создать загрузчик словарей WordleDictionaryLoader
-    загрузить словарь WordleDictionary с помощью класса WordleDictionaryLoader
-    затем создать игру WordleGame и передать ей словарь
-    вызвать игровой метод в котором в цикле опрашивать пользователя и передавать информацию в игру
-    вывести состояние игры и конечный результат
- */
 public class Wordle {
     public static void main(String[] args) {
         try (PrintWriter log = new PrintWriter("wordle.log")) {
@@ -41,6 +32,16 @@ public class Wordle {
                         String hint = game.getHint();
                         System.out.println("Подсказка: " + hint);
                     } else {
+                        // Валидация ввода
+                        if (input.length() != 5) {
+                            System.out.println("Слово должно содержать ровно 5 букв!");
+                            continue;
+                        }
+                        if (!input.matches("[а-яё]+")) {
+                            System.out.println("Используйте только русские буквы!");
+                            continue;
+                        }
+
                         try {
                             String result = game.makeGuess(input);
                             System.out.println(input);

@@ -35,7 +35,7 @@ public class WordleGame {
     }
 
     public String makeGuess(String guess) throws WordNotFoundInDictionary {
-        guess = toLover(guess);
+        guess = toLower(guess);
 
         if (!dictionary.contains(guess)) {
             throw new WordNotFoundInDictionary("Слово '" + guess + "' не найдено в словаре");
@@ -75,7 +75,7 @@ public class WordleGame {
         }
     }
 
-    private String toLover(String word) {
+    private String toLower(String word) {
         return word.toLowerCase().replace('ё', 'е');
     }
 
@@ -84,7 +84,6 @@ public class WordleGame {
         if (!possibleWords.isEmpty()) {
             return possibleWords.get(0);
         }
-        // Если подходящих слов нет, возвращаем любое случайное слово
         return dictionary.getRandomWord();
     }
 

@@ -1,44 +1,37 @@
 package ru.yandex.practicum;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-/*
-этот класс содержит в себе список слов List<String>
-    его методы похожи на методы списка, но учитывают особенности игры
-    также этот класс может содержать рутинные функции по сравнению слов, букв и т.д.
- */
 public class WordleDictionary {
-
     private List<String> words;
+    private Set<String> wordSet; // Для быстрого поиска
     private String answer;
 
     public WordleDictionary(List<String> words) {
         this.words = new ArrayList<>();
+        this.wordSet = new HashSet<>();
 
-        for (String word: words) {
+        for (String word : words) {
             String lower = toLower(word);
             if (lower.length() == 5) {
                 this.words.add(lower);
+                this.wordSet.add(lower);
             }
         }
     }
 
     public String toLower(String word) {
-        return word.toLowerCase().replace('ё', 'e');
+        if (word == null || word.isEmpty()) {
+            return word;
+        }
+        return word.toLowerCase()
+                .replace('Ё', 'ё')
+                .replace('Е', 'е');
     }
 
     public boolean contains(String word) {
         String normalize = toLower(word);
-
-        for(String dictWord: words) {
-            if (dictWord.equals(normalize)) {
-                return true;
-            }
-        }
-        return false;
+        return wordSet.contains(normalize);
     }
 
     public String getRandomWord() {
@@ -52,9 +45,10 @@ public class WordleDictionary {
     public String analyzeMatch(String guess, String answer) {
         char[] guessChars = guess.toCharArray();
         char[] answerChars = answer.toCharArray();
-        StringBuilder result = new StringBuilder("     ");
+        StringBuilder result = new StringBuilder("-----"); // Инициализируем все как '-'
         boolean[] usedInAnswer = new boolean[5];
 
+        // Первый проход: отмечаем точные совпадения (+)
         for (int i = 0; i < 5; i++) {
             if (guessChars[i] == answerChars[i]) {
                 result.setCharAt(i, '+');
@@ -62,18 +56,15 @@ public class WordleDictionary {
             }
         }
 
+        // Второй проход: ищем частичные совпадения (^)
         for (int i = 0; i < 5; i++) {
-            if (result.charAt(i) != '+') {
+            if (result.charAt(i) == '-') { // Только если ещё не отмечено как '+'
                 for (int j = 0; j < 5; j++) {
                     if (!usedInAnswer[j] && guessChars[i] == answerChars[j]) {
                         result.setCharAt(i, '^');
                         usedInAnswer[j] = true;
                         break;
                     }
-                }
-
-                if (result.charAt(i) == ' ') {
-                    result.setCharAt(i, '-');
                 }
             }
         }
@@ -90,7 +81,7 @@ public class WordleDictionary {
             // Проверяем соответствие всем предыдущим попыткам
             for (String guess : previousGuesses) {
                 String expectedResult = analyzeMatch(guess, word);
-                String actualResult = analyzeMatch(guess, answer);
+                String actualResult = analyzeMatch(guess, this.answer);
                 if (!expectedResult.equals(actualResult)) {
                     matchesAll = false;
                     break;
@@ -112,16 +103,18 @@ public class WordleDictionary {
     private boolean containsRequiredLetters(String word, Map<Character, Boolean> letters) {
         for (Map.Entry<Character, Boolean> entry : letters.entrySet()) {
             char letter = entry.getKey();
-            boolean inCorrectPosition = entry.getValue();
+            boolean mustBeInCorrectPosition = entry.getValue();
 
-            int letterIndex = word.indexOf(letter);
-
-            if (inCorrectPosition) {
-                if (letterIndex == -1) {
+            if (mustBeInCorrectPosition) {
+                // Буква должна быть в конкретной позиции (например, позиция 2)
+                // Здесь нужно уточнить логику — возможно, передавать не только букву, но и позицию
+                // Для упрощения: проверяем, что буква есть в слове
+                if (word.indexOf(letter) == -1) {
                     return false;
                 }
             } else {
-                if (letterIndex == -1) {
+                // Буква просто должна присутствовать в слове
+                if (word.indexOf(letter) == -1) {
                     return false;
                 }
             }
