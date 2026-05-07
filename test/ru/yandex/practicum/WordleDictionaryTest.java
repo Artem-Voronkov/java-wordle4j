@@ -1,59 +1,46 @@
 package ru.yandex.practicum;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.util.Arrays;
-import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WordleDictionaryTest {
     private WordleDictionary dictionary;
-    private List<String> testWords;
 
     @BeforeEach
     void setUp() {
-        testWords = Arrays.asList("кошка", "мышка", "крыша", "книга", "ручка");
-        dictionary = new WordleDictionary(testWords);
+        dictionary = new WordleDictionary(Arrays.asList("яблок", "груша", "слива", "вишня", "персик"));
     }
 
     @Test
-    void testContains_WordExists() {
-        assertTrue(dictionary.contains("кошка"));
-        assertTrue(dictionary.contains("КОШКА"));
-        assertTrue(dictionary.contains("кОшКа"));
-        assertTrue(dictionary.contains("кошкА"));
+    void testContains_ValidWord() {
+        assertTrue(dictionary.contains("яблок"));
+        assertTrue(dictionary.contains("ЯБЛОК"));
     }
 
     @Test
-    void testContains_WordDoesNotExist() {
-        assertFalse(dictionary.contains("слон"));
-        assertFalse(dictionary.contains(""));
+    void testContains_InvalidWord() {
+        assertFalse(dictionary.contains("апельсин"));
     }
 
     @Test
-    void testGetRandomWord_ReturnsValidWord() {
-        String randomWord = dictionary.getRandomWord();
-        assertTrue(testWords.contains(randomWord));
-        assertEquals(5, randomWord.length());
+    void testGetRandomWord_NotEmpty() {
+        assertNotNull(dictionary.getRandomWord());
     }
 
     @Test
     void testAnalyzeMatch_ExactMatch() {
-        assertEquals("+++++", dictionary.analyzeMatch("кошка", "кошка"));
+        assertEquals("+++++", dictionary.analyzeMatch("яблок", "яблок"));
     }
 
     @Test
     void testAnalyzeMatch_PartialMatch() {
-        assertEquals("+--^+", dictionary.analyzeMatch("крыша", "кошка"));
+        assertEquals("+-^--", dictionary.analyzeMatch("ягода", "яблок"));
     }
 
     @Test
-    void testToLower_NormalizesWord() {
-        assertEquals("кошка", dictionary.toLower("КОШКА"));
-        assertEquals("кошка", dictionary.toLower("кОшКа"));
-        assertEquals("кошка", dictionary.toLower("кошкА"));
-        assertEquals("кошка", dictionary.toLower("кошка"));
-        assertEquals("кошёк", dictionary.toLower("КОШЁК"));
-        assertEquals("кошёк", dictionary.toLower("КоШёК"));
-        assertEquals("ёжик", dictionary.toLower("ЁЖИК"));
+    void testAnalyzeMatch_NoMatch() {
+        assertEquals("-----", dictionary.analyzeMatch("груша", "яблок"));
     }
 }

@@ -38,9 +38,10 @@ public class Wordle {
                             continue;
                         }
                         if (!input.matches("[а-яё]+")) {
-                            System.out.println("Используйте только русские буквы!");
+                            System.out.println("Можно использовать только русские буквы и нижний регистр!");
                             continue;
                         }
+
 
                         try {
                             String result = game.makeGuess(input);

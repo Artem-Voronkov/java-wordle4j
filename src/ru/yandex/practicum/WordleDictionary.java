@@ -24,7 +24,7 @@ public class WordleDictionary {
         if (word == null || word.isEmpty()) {
             return word;
         }
-        return word.toLowerCase()
+        return word.toLowerCase(Locale.forLanguageTag("ru"))
                 .replace('Ё', 'ё')
                 .replace('Е', 'е');
     }
@@ -42,27 +42,27 @@ public class WordleDictionary {
         return words.get(random.nextInt(words.size()));
     }
 
-    public String analyzeMatch(String guess, String answer) {
-        char[] guessChars = guess.toCharArray();
-        char[] answerChars = answer.toCharArray();
-        StringBuilder result = new StringBuilder("-----"); // Инициализируем все как '-'
-        boolean[] usedInAnswer = new boolean[5];
+    public String analyzeMatch(String guess, String target) {
+        StringBuilder result = new StringBuilder("-----");
+        char[] targetArray = target.toCharArray();
+        boolean[] used = new boolean[targetArray.length];
 
-        // Первый проход: отмечаем точные совпадения (+)
-        for (int i = 0; i < 5; i++) {
-            if (guessChars[i] == answerChars[i]) {
+        // Сначала отмечаем точные совпадения (+)
+        for (int i = 0; i < guess.length(); i++) {
+            if (guess.charAt(i) == targetArray[i]) {
                 result.setCharAt(i, '+');
-                usedInAnswer[i] = true;
+                used[i] = true;
             }
         }
 
-        // Второй проход: ищем частичные совпадения (^)
-        for (int i = 0; i < 5; i++) {
-            if (result.charAt(i) == '-') { // Только если ещё не отмечено как '+'
-                for (int j = 0; j < 5; j++) {
-                    if (!usedInAnswer[j] && guessChars[i] == answerChars[j]) {
+        // Затем отмечаем буквы, которые есть в слове, но на других позициях (^)
+        for (int i = 0; i < guess.length(); i++) {
+            if (result.charAt(i) != '+') { // Пропускаем уже отмеченные точные совпадения
+                char c = guess.charAt(i);
+                for (int j = 0; j < targetArray.length; j++) {
+                    if (!used[j] && c == targetArray[j]) {
                         result.setCharAt(i, '^');
-                        usedInAnswer[j] = true;
+                        used[j] = true;
                         break;
                     }
                 }
@@ -71,45 +71,63 @@ public class WordleDictionary {
         return result.toString();
     }
 
-    public List<String> filterByConstraints(List<String> previousGuesses,
-                                            Map<Character, Boolean> knownLetters) {
-        List<String> result = new ArrayList<>();
 
-        for (String word : words) {
-            boolean matchesAll = true;
+    // Вспомогательный класс для хранения результатов попыток
+    public static class GuessResult {
+        public final String guess;
+        public final String result;
 
-            // Проверяем соответствие всем предыдущим попыткам
-            for (String guess : previousGuesses) {
-                String expectedResult = analyzeMatch(guess, word);
-                String actualResult = analyzeMatch(guess, this.answer);
-                if (!expectedResult.equals(actualResult)) {
-                    matchesAll = false;
-                    break;
+        public GuessResult(String guess, String result) {
+            this.guess = guess;
+            this.result = result;
+        }
+    }
+
+    // Класс для описания ограничений по буквам
+    public static class LetterConstraint {
+        public final char letter;
+        public final Integer position; // null — любая позиция, число — конкретная
+
+        public LetterConstraint(char letter, Integer position) {
+            this.letter = letter;
+            this.position = position;
+        }
+    }
+
+    public List<String> filterByConstraints(List<GuessResult> previousGuesses, List<LetterConstraint> knownConstraints) {
+        List<String> result = new ArrayList<>(words);
+
+        // Фильтруем по результатам предыдущих попыток
+        for (GuessResult guessResult : previousGuesses) {
+            List<String> toRemove = new ArrayList<>();
+            for (String word : result) {
+                if (!analyzeMatch(guessResult.guess, word).equals(guessResult.result)) {
+                    toRemove.add(word);
                 }
             }
-
-            if (!matchesAll) continue;
-
-            // Проверяем наличие обязательных букв
-            if (!containsRequiredLetters(word, knownLetters)) {
-                continue;
-            }
-
-            result.add(word);
+            result.removeAll(toRemove);
         }
+
+        // Фильтруем по известным ограничениям
+        List<String> toRemoveFinal = new ArrayList<>();
+        for (String word : result) {
+            if (!containsRequiredLetters(word, knownConstraints)) {
+                toRemoveFinal.add(word);
+            }
+        }
+        result.removeAll(toRemoveFinal);
+
         return result;
     }
 
-    private boolean containsRequiredLetters(String word, Map<Character, Boolean> letters) {
-        for (Map.Entry<Character, Boolean> entry : letters.entrySet()) {
-            char letter = entry.getKey();
-            boolean mustBeInCorrectPosition = entry.getValue();
+    private boolean containsRequiredLetters(String word, List<LetterConstraint> constraints) {
+        for (LetterConstraint constraint : constraints) {
+            char letter = constraint.letter;
+            Integer position = constraint.position;
 
-            if (mustBeInCorrectPosition) {
-                // Буква должна быть в конкретной позиции (например, позиция 2)
-                // Здесь нужно уточнить логику — возможно, передавать не только букву, но и позицию
-                // Для упрощения: проверяем, что буква есть в слове
-                if (word.indexOf(letter) == -1) {
+            if (position != null) {
+                // Буква должна быть на конкретной позиции
+                if (position < 0 || position >= word.length() || word.charAt(position) != letter) {
                     return false;
                 }
             } else {

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class WordleGame {
     private final WordleDictionary dictionary;
     private final PrintWriter log;
@@ -14,8 +13,8 @@ public class WordleGame {
     private int attemptsLeft;
     private boolean gameOver;
     private boolean won;
-    private List<String> previousGuesses;
-    private Map<Character, Boolean> knownLetters;
+    List<WordleDictionary.GuessResult> previousGuessResults;
+    Map<Character, Boolean> knownLetters;
 
     public WordleGame(WordleDictionary dictionary, PrintWriter log) {
         this.dictionary = dictionary;
@@ -29,22 +28,22 @@ public class WordleGame {
         attemptsLeft = 6;
         gameOver = false;
         won = false;
-        previousGuesses = new ArrayList<>();
+        previousGuessResults = new ArrayList<>();
         knownLetters = new HashMap<>();
         log.println("Игра начата. Загадано слово: " + answer);
     }
 
     public String makeGuess(String guess) throws WordNotFoundInDictionary {
-        guess = toLower(guess);
+        guess = dictionary.toLower(guess);
 
         if (!dictionary.contains(guess)) {
             throw new WordNotFoundInDictionary("Слово '" + guess + "' не найдено в словаре");
         }
 
         attemptsLeft--;
-        previousGuesses.add(guess);
 
         String result = dictionary.analyzeMatch(guess, answer);
+        previousGuessResults.add(new WordleDictionary.GuessResult(guess, result));
         log.println("Попытка: " + guess + " -> " + result);
 
         if (guess.equals(answer)) {
@@ -58,7 +57,7 @@ public class WordleGame {
         return result;
     }
 
-    private void updateKnownLetters(String guess, String result) {
+    public void updateKnownLetters(String guess, String result) {
         char[] guessChars = guess.toCharArray();
         char[] resultChars = result.toCharArray();
 
@@ -75,12 +74,14 @@ public class WordleGame {
         }
     }
 
-    private String toLower(String word) {
-        return word.toLowerCase().replace('ё', 'е');
-    }
-
     public String getHint() {
-        List<String> possibleWords = dictionary.filterByConstraints(previousGuesses, knownLetters);
+        List<WordleDictionary.GuessResult> guessResults = new ArrayList<>(previousGuessResults);
+        List<WordleDictionary.LetterConstraint> letterConstraints = new ArrayList<>();
+        for (Map.Entry<Character, Boolean> entry : knownLetters.entrySet()) {
+            letterConstraints.add(new WordleDictionary.LetterConstraint(entry.getKey(), null));
+        }
+
+        List<String> possibleWords = dictionary.filterByConstraints(guessResults, letterConstraints);
         if (!possibleWords.isEmpty()) {
             return possibleWords.get(0);
         }
@@ -101,5 +102,13 @@ public class WordleGame {
 
     public int getAttemptsLeft() {
         return attemptsLeft;
+    }
+
+    public List<WordleDictionary.GuessResult> getPreviousGuessResults() {
+        return new ArrayList<>(previousGuessResults);
+    }
+
+    public Map<Character, Boolean> getKnownLetters() {
+        return new HashMap<>(knownLetters);
     }
 }
