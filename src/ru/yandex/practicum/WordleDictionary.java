@@ -26,7 +26,7 @@ public class WordleDictionary {
         }
     }
 
-    private String toLower(String word) {
+    public String toLower(String word) {
         return word.toLowerCase().replace('ё', 'e');
     }
 
@@ -136,9 +136,4 @@ public class WordleDictionary {
     public int size() {
         return words.size();
     }
-
-    public List<String> getAllWords() {
-        return new ArrayList<>(words);
-    }
-
 }
