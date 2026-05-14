@@ -48,20 +48,20 @@ public class WordleDictionary {
         boolean[] used = new boolean[targetArray.length];
 
         // Сначала отмечаем точные совпадения (+)
-        for (int i = 0; i < guess.length(); i++) {
-            if (guess.charAt(i) == targetArray[i]) {
-                result.setCharAt(i, '+');
-                used[i] = true;
+        for (int count = 0; count < guess.length(); count++) {
+            if (guess.charAt(count) == targetArray[count]) {
+                result.setCharAt(count, '+');
+                used[count] = true;
             }
         }
 
         // Затем отмечаем буквы, которые есть в слове, но на других позициях (^)
-        for (int i = 0; i < guess.length(); i++) {
-            if (result.charAt(i) != '+') { // Пропускаем уже отмеченные точные совпадения
-                char c = guess.charAt(i);
+        for (int count = 0; count < guess.length(); count++) {
+            if (result.charAt(count) != '+') { // Пропускаем уже отмеченные точные совпадения
+                char c = guess.charAt(count);
                 for (int j = 0; j < targetArray.length; j++) {
                     if (!used[j] && c == targetArray[j]) {
-                        result.setCharAt(i, '^');
+                        result.setCharAt(count, '^');
                         used[j] = true;
                         break;
                     }
